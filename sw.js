@@ -1,48 +1,79 @@
-const CACHE_NAME = 'hk-schools-v1';
-const ASSETS_TO_CACHE = [
-    './',
-    './index.html',
-    './styles.css',
-    './app.js',
-    './manifest.json'
+const CACHE_NAME = "hk-school-explorer-v1";
+const API_CACHE = "hk-school-api-v1";
+const APP_SHELL = [
+    "/",
+    "/index.html",
+    "/styles.css",
+    "/app.js",
+    "/manifest.webmanifest",
+    "/offline.html",
+    "/assets/icon-192.svg",
+    "/assets/icon-512.svg",
+    "/assets/badge.svg",
+    "/data/sample-schools.json",
 ];
 
-// Install Event - Cache assets
-self.addEventListener('install', event => {
-    event.waitUntil(
-        caches.open(CACHE_NAME)
-            .then(cache => {
-                return cache.addAll(ASSETS_TO_CACHE);
-            })
-    );
+self.addEventListener("install", (event) => {
+    event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)));
+    self.skipWaiting();
 });
 
-// Activate Event - Clean up old caches
-self.addEventListener('activate', event => {
+self.addEventListener("activate", (event) => {
     event.waitUntil(
-        caches.keys().then(cacheNames => {
-            return Promise.all(
-                cacheNames.map(cache => {
-                    if (cache !== CACHE_NAME) {
-                        return caches.delete(cache);
-                    }
-                })
-            );
-        })
+        caches.keys().then((keys) =>
+            Promise.all(
+                keys
+                    .filter((key) => ![CACHE_NAME, API_CACHE].includes(key))
+                    .map((key) => caches.delete(key))
+            )
+        )
     );
+    self.clients.claim();
 });
 
-// Fetch Event - Serve from cache if available, fallback to network
-self.addEventListener('fetch', event => {
-    // We don't want to cache the API call responses forever, just the app shell.
-    if (event.request.url.includes('api.allorigins.win')) {
-        return; 
+self.addEventListener("fetch", (event) => {
+    const requestUrl = new URL(event.request.url);
+
+    if (requestUrl.pathname.endsWith("SCH_LOC_EDB.json")) {
+        event.respondWith(networkFirstApi(event.request));
+        return;
     }
 
-    event.respondWith(
-        caches.match(event.request)
-            .then(response => {
-                return response || fetch(event.request);
+    if (event.request.mode === "navigate") {
+        event.respondWith(
+            fetch(event.request).catch(async () => {
+                const cache = await caches.open(CACHE_NAME);
+                return cache.match("/offline.html");
             })
-    );
+        );
+        return;
+    }
+
+    event.respondWith(cacheFirst(event.request));
 });
+
+async function cacheFirst(request) {
+    const cached = await caches.match(request);
+    if (cached) {
+        return cached;
+    }
+    const response = await fetch(request);
+    const cache = await caches.open(CACHE_NAME);
+    cache.put(request, response.clone());
+    return response;
+}
+
+async function networkFirstApi(request) {
+    const cache = await caches.open(API_CACHE);
+    try {
+        const response = await fetch(request);
+        cache.put(request, response.clone());
+        return response;
+    } catch {
+        const cached = await cache.match(request);
+        if (cached) {
+            return cached;
+        }
+        return caches.match("/data/sample-schools.json");
+    }
+}

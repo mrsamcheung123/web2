@@ -1,0 +1,28 @@
+[
+    {
+        "SCHOOL NO.": "100001",
+        "ENGLISH NAME": "Example Primary School",
+        "ENGLISH CATEGORY": "Aided Primary Schools",
+        "ENGLISH ADDRESS": "1 Education Road, Kowloon",
+        "DISTRICT": "Kowloon City",
+        "SCHOOL LEVEL": "Primary",
+        "TELEPHONE": "2123 4567",
+        "WEBSITE": "www.example-primary.edu.hk",
+        "STUDENTS GENDER": "Co-educational",
+        "SESSION": "Whole Day",
+        "FINANCE TYPE": "Aided"
+    },
+    {
+        "SCHOOL NO.": "100002",
+        "ENGLISH NAME": "Example Secondary College",
+        "ENGLISH CATEGORY": "Government Secondary Schools",
+        "ENGLISH ADDRESS": "88 Harbour Street, Wan Chai",
+        "DISTRICT": "Wan Chai",
+        "SCHOOL LEVEL": "Secondary",
+        "TELEPHONE": "2987 6543",
+        "WEBSITE": "www.example-secondary.edu.hk",
+        "STUDENTS GENDER": "Boys",
+        "SESSION": "Whole Day",
+        "FINANCE TYPE": "Government"
+    }
+]
